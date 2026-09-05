@@ -954,39 +954,6 @@ window.QUESTION_BANK = [
     sourceReference: "Supported Cloud Environments"
   },
   {
-    id: 66,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "medium",
-    question: "Which persona's primary challenge is 'Policy and controls,' managing prevention policies across host groups and custom IOAs?",
-    options: ["Tim", "Mark", "Noel", "Tracey"],
-    correctAnswer: "Noel",
-    explanation: "Noel (Security Administrator) manages and controls prevention policies via host groups and custom IOAs, with the challenge 'Policy and controls.'",
-    sourceReference: "Endpoint Security - How Noel uses it"
-  },
-  {
-    id: 67,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "medium",
-    question: "Which persona is focused on 'Compliance at scale' and uses Exposure Management for asset discovery and vulnerability correlation to support auditors?",
-    options: ["Riley", "Morgan", "Sarah", "Tracey"],
-    correctAnswer: "Morgan",
-    explanation: "Morgan (Risk Manager) has the challenge 'Compliance at scale' and uses Exposure Management to discover assets, correlate vulnerabilities, and demonstrate risk reduction to auditors.",
-    sourceReference: "Exposure Management - How Morgan uses it"
-  },
-  {
-    id: 69,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "medium",
-    question: "Which persona is responsible for 'AI detection and response,' overseeing AI interactions and enforcing data protection policies for generative AI usage?",
-    options: ["Tracey", "Riley", "Sarah", "Morgan"],
-    correctAnswer: "Riley",
-    explanation: "Riley (AI Governance Lead) oversees how employees and AI agents interact with models, giving full visibility into prompt activity and enforcing data protection policies.",
-    sourceReference: "AIDR - How Riley uses it"
-  },
-  {
     id: 70,
     type: "single",
     topic: "Implementation Strategy",
