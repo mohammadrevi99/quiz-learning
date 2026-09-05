@@ -954,17 +954,6 @@ window.QUESTION_BANK = [
     sourceReference: "Supported Cloud Environments"
   },
   {
-    id: 65,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "easy",
-    question: "Which persona in the training material is described as needing 'faster threat response' and focuses on triaging alerts?",
-    options: ["Noel", "Jane", "Sarah", "Morgan"],
-    correctAnswer: "Jane",
-    explanation: "Jane (SOC Analyst) is described with the challenge 'Faster threat response' and says 'I triage alerts and respond to threats!'",
-    sourceReference: "Introduction to Falcon - personas"
-  },
-  {
     id: 66,
     type: "single",
     topic: "Platform Personas",
@@ -985,17 +974,6 @@ window.QUESTION_BANK = [
     correctAnswer: "Morgan",
     explanation: "Morgan (Risk Manager) has the challenge 'Compliance at scale' and uses Exposure Management to discover assets, correlate vulnerabilities, and demonstrate risk reduction to auditors.",
     sourceReference: "Exposure Management - How Morgan uses it"
-  },
-  {
-    id: 68,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "easy",
-    question: "Which persona's role centers on 'Credential protection' and identity-based attack detection?",
-    options: ["Mark", "Tim", "Riley", "Jane"],
-    correctAnswer: "Mark",
-    explanation: "Mark (Identity Specialist) is described with the challenge 'Credential protection' and says 'I handle identity and access security!'",
-    sourceReference: "Introduction to Falcon - personas"
   },
   {
     id: 69,
@@ -2074,17 +2052,6 @@ window.QUESTION_BANK = [
     correctAnswer: "48 minutes",
     explanation: "The material cites 'the average eCrime breakout time being just 48 minutes from the time an adversary first gains entry to your network to the time when they are moving laterally across your systems.'",
     sourceReference: "Why This Architecture Matters"
-  },
-  {
-    id: 147,
-    type: "single",
-    topic: "Platform Personas",
-    difficulty: "easy",
-    question: "Which persona is described as needing to 'hunt across all endpoints with unified data visibility'?",
-    options: ["Tim", "Tracey", "Sarah", "Jane"],
-    correctAnswer: "Tracey",
-    explanation: "Tracey (Threat Hunter) is quoted as saying: 'I hunt across all endpoints with unified data visibility.'",
-    sourceReference: "Why one agent matters"
   },
   {
     id: 148,
