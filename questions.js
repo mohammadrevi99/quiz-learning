@@ -565,22 +565,6 @@ window.QUESTION_BANK = [
     sourceReference: "Introduction to Falcon Fusion SOAR"
   },
   {
-    id: 36,
-    type: "single",
-    topic: "Falcon Fusion SOAR",
-    difficulty: "medium",
-    question: "In the Falcon platform's visual workflow builder, which color and icon represents a Trigger?",
-    options: [
-      "Purple with two diverging arrows",
-      "Green with a flag",
-      "Pink with a lightning bolt",
-      "Blue with circular arrows"
-    ],
-    correctAnswer: "Pink with a lightning bolt",
-    explanation: "The Trigger icon is pink with a lightning bolt. Condition is purple with two diverging arrows, Action is green with a flag, and Loop is blue with circular arrows.",
-    sourceReference: "Basic workflow elements: Triggers"
-  },
-  {
     id: 37,
     type: "single",
     topic: "Falcon Fusion SOAR",
@@ -1226,22 +1210,6 @@ window.QUESTION_BANK = [
     correctAnswer: "Advanced Loops add conditional logic and dynamic branching, including nested loops, complex conditions, and the ability to skip or break the loop based on criteria",
     explanation: "Advanced loops enhance basic loops by adding conditional logic and dynamic branching within the loop, such as nested loops and complex conditions, and allow skipping or breaking the loop based on specific criteria.",
     sourceReference: "Advanced Loops"
-  },
-  {
-    id: 89,
-    type: "single",
-    topic: "Falcon Fusion SOAR",
-    difficulty: "easy",
-    question: "In the Falcon platform's visual workflow builder, what color and icon represents a Loop, and how is the start of the loop visually distinguished from the end?",
-    options: [
-      "Blue, filled circular arrows; start is outlined, end is filled",
-      "Blue, circular arrows; start is filled with blue, end is only outlined in blue",
-      "Green, filled arrows; no visual distinction between start and end",
-      "Purple, dashed arrows; start and end look identical"
-    ],
-    correctAnswer: "Blue, circular arrows; start is filled with blue, end is only outlined in blue",
-    explanation: "The Loop icon is blue with 2 circular arrows. The start of the loop is filled with blue, while the end of the loop is only outlined in blue.",
-    sourceReference: "Advanced workflow elements - Loops"
   },
   {
     id: 90,
