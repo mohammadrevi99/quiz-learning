@@ -2,9 +2,19 @@
   "use strict";
 
   var STORAGE_KEY = "ccfa_quiz_state_v1";
-  var questions = window.QUESTION_BANK;
+  var FULL_POOL = window.QUESTION_BANK;
+  var POOL_BY_ID = {};
+  FULL_POOL.forEach(function (q) { POOL_BY_ID[q.id] = q; });
+
+  var LENGTH_OPTIONS = [25, 50, 100, "all"];
 
   var state = loadState() || createFreshState();
+
+  // "questions" always refers to the ACTIVE SESSION's question list (a
+  // random subset of FULL_POOL chosen at start/restart time), not the
+  // entire pool. This is what every render/grading function operates on.
+  var questions = [];
+  rebuildSessionQuestions();
 
   var mainEl = document.getElementById("main-content");
   var modalOverlay = document.getElementById("modal-overlay");
@@ -14,7 +24,7 @@
   restartBtn.addEventListener("click", function () {
     showModal({
       title: "Restart Quiz",
-      body: "This will erase all your answers and progress, and start over from Question 1. This action cannot be undone.",
+      body: "This will erase all your answers and progress, and let you start a new attempt (with a freshly drawn set of questions from the pool of " + FULL_POOL.length + "). This action cannot be undone.",
       actions: [
         { label: "Cancel", className: "btn-ghost", onClick: hideModal },
         {
@@ -23,6 +33,7 @@
           onClick: function () {
             state = createFreshState();
             saveState();
+            rebuildSessionQuestions();
             hideModal();
             render();
           }
@@ -33,10 +44,41 @@
 
   function createFreshState() {
     return {
+      phase: "start", // "start" | "exam" | "results"
+      examLength: 50,
+      sessionQuestionIds: [],
       currentIndex: 0,
       answers: {}, // id -> string (single) or array (multiple)
       submitted: false
     };
+  }
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
+    }
+    return a;
+  }
+
+  function drawSessionQuestionIds(length) {
+    var allIds = FULL_POOL.map(function (q) { return q.id; });
+    var shuffled = shuffle(allIds);
+    if (length === "all" || length >= allIds.length) return shuffled;
+    return shuffled.slice(0, length);
+  }
+
+  function rebuildSessionQuestions() {
+    if (!state.sessionQuestionIds || state.sessionQuestionIds.length === 0) {
+      questions = [];
+      return;
+    }
+    questions = state.sessionQuestionIds
+      .map(function (id) { return POOL_BY_ID[id]; })
+      .filter(Boolean);
   }
 
   function loadState() {
@@ -44,7 +86,11 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       var parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed.currentIndex !== "number") return null;
+      if (!parsed || typeof parsed !== "object") return null;
+      if (!parsed.phase) {
+        // legacy state from the fixed-50 version: treat as start screen
+        return createFreshState();
+      }
       return parsed;
     } catch (e) {
       return null;
@@ -115,11 +161,89 @@
   }
 
   function render() {
-    if (state.submitted) {
+    if (state.phase === "start") {
+      renderStartScreen();
+    } else if (state.phase === "results" || state.submitted) {
       renderResultsAndReview();
     } else {
       renderExam();
     }
+  }
+
+  function renderStartScreen() {
+    mainEl.innerHTML = "";
+
+    var panel = document.createElement("div");
+    panel.className = "question-panel";
+    panel.style.maxWidth = "560px";
+    panel.style.margin = "0 auto";
+
+    var heading = document.createElement("div");
+    heading.className = "question-text";
+    heading.style.marginBottom = "6px";
+    heading.textContent = "CCFA Practice Exam";
+    panel.appendChild(heading);
+
+    var sub = document.createElement("div");
+    sub.style.fontSize = "13.5px";
+    sub.style.color = "var(--text-secondary)";
+    sub.style.marginBottom = "22px";
+    sub.textContent = "This attempt draws a fresh random set of questions from a pool of " +
+      FULL_POOL.length + ". Retake the quiz anytime for a mostly-different set - the goal is understanding, not memorizing question order.";
+    panel.appendChild(sub);
+
+    var label = document.createElement("div");
+    label.style.fontSize = "13px";
+    label.style.fontWeight = "600";
+    label.style.marginBottom = "10px";
+    label.textContent = "How many questions for this attempt?";
+    panel.appendChild(label);
+
+    var optionsWrap = document.createElement("div");
+    optionsWrap.className = "options-list";
+
+    LENGTH_OPTIONS.forEach(function (opt) {
+      var row = document.createElement("label");
+      row.className = "option-row";
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "exam_length";
+      input.value = String(opt);
+      input.checked = state.examLength === opt;
+      if (input.checked) row.classList.add("selected");
+      input.addEventListener("change", function () {
+        state.examLength = opt;
+        renderStartScreen();
+      });
+      var span = document.createElement("span");
+      span.textContent = opt === "all"
+        ? "All available questions (" + FULL_POOL.length + ")"
+        : opt + " questions";
+      row.appendChild(input);
+      row.appendChild(span);
+      optionsWrap.appendChild(row);
+    });
+
+    panel.appendChild(optionsWrap);
+
+    var startBtn = document.createElement("button");
+    startBtn.className = "btn btn-primary";
+    startBtn.style.width = "100%";
+    startBtn.textContent = "Start Exam";
+    startBtn.addEventListener("click", function () {
+      state.sessionQuestionIds = drawSessionQuestionIds(state.examLength);
+      state.currentIndex = 0;
+      state.answers = {};
+      state.submitted = false;
+      state.phase = "exam";
+      rebuildSessionQuestions();
+      saveState();
+      render();
+      window.scrollTo(0, 0);
+    });
+    panel.appendChild(startBtn);
+
+    mainEl.appendChild(panel);
   }
 
   function renderExam() {
@@ -267,6 +391,13 @@
     summary.innerHTML = "<strong>" + answeredCount() + "</strong> of " + questions.length + " answered";
     panel.appendChild(summary);
 
+    var poolNote = document.createElement("div");
+    poolNote.style.fontSize = "11px";
+    poolNote.style.color = "var(--text-secondary)";
+    poolNote.style.marginBottom = "14px";
+    poolNote.textContent = "Drawn from a pool of " + FULL_POOL.length + " questions";
+    panel.appendChild(poolNote);
+
     var grid = document.createElement("div");
     grid.className = "navigator-grid";
 
@@ -321,6 +452,7 @@
 
   function finalizeSubmit() {
     state.submitted = true;
+    state.phase = "results";
     saveState();
     render();
     window.scrollTo(0, 0);
