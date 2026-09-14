@@ -565,6 +565,22 @@ window.QUESTION_BANK = [
     sourceReference: "Introduction to Falcon Fusion SOAR"
   },
   {
+    id: 36,
+    type: "single",
+    topic: "Falcon Fusion SOAR",
+    difficulty: "medium",
+    question: "In the Falcon platform's visual workflow builder, which color and icon represents a Trigger?",
+    options: [
+      "Purple with two diverging arrows",
+      "Green with a flag",
+      "Pink with a lightning bolt",
+      "Blue with circular arrows"
+    ],
+    correctAnswer: "Pink with a lightning bolt",
+    explanation: "The Trigger icon is pink with a lightning bolt. Condition is purple with two diverging arrows, Action is green with a flag, and Loop is blue with circular arrows.",
+    sourceReference: "Basic workflow elements: Triggers"
+  },
+  {
     id: 37,
     type: "single",
     topic: "Falcon Fusion SOAR",
@@ -938,6 +954,61 @@ window.QUESTION_BANK = [
     sourceReference: "Supported Cloud Environments"
   },
   {
+    id: 65,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "easy",
+    question: "Which persona in the training material is described as needing 'faster threat response' and focuses on triaging alerts?",
+    options: ["Noel", "Jane", "Sarah", "Morgan"],
+    correctAnswer: "Jane",
+    explanation: "Jane (SOC Analyst) is described with the challenge 'Faster threat response' and says 'I triage alerts and respond to threats!'",
+    sourceReference: "Introduction to Falcon - personas"
+  },
+  {
+    id: 66,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "medium",
+    question: "Which persona's primary challenge is 'Policy and controls,' managing prevention policies across host groups and custom IOAs?",
+    options: ["Tim", "Mark", "Noel", "Tracey"],
+    correctAnswer: "Noel",
+    explanation: "Noel (Security Administrator) manages and controls prevention policies via host groups and custom IOAs, with the challenge 'Policy and controls.'",
+    sourceReference: "Endpoint Security - How Noel uses it"
+  },
+  {
+    id: 67,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "medium",
+    question: "Which persona is focused on 'Compliance at scale' and uses Exposure Management for asset discovery and vulnerability correlation to support auditors?",
+    options: ["Riley", "Morgan", "Sarah", "Tracey"],
+    correctAnswer: "Morgan",
+    explanation: "Morgan (Risk Manager) has the challenge 'Compliance at scale' and uses Exposure Management to discover assets, correlate vulnerabilities, and demonstrate risk reduction to auditors.",
+    sourceReference: "Exposure Management - How Morgan uses it"
+  },
+  {
+    id: 68,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "easy",
+    question: "Which persona's role centers on 'Credential protection' and identity-based attack detection?",
+    options: ["Mark", "Tim", "Riley", "Jane"],
+    correctAnswer: "Mark",
+    explanation: "Mark (Identity Specialist) is described with the challenge 'Credential protection' and says 'I handle identity and access security!'",
+    sourceReference: "Introduction to Falcon - personas"
+  },
+  {
+    id: 69,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "medium",
+    question: "Which persona is responsible for 'AI detection and response,' overseeing AI interactions and enforcing data protection policies for generative AI usage?",
+    options: ["Tracey", "Riley", "Sarah", "Morgan"],
+    correctAnswer: "Riley",
+    explanation: "Riley (AI Governance Lead) oversees how employees and AI agents interact with models, giving full visibility into prompt activity and enforcing data protection policies.",
+    sourceReference: "AIDR - How Riley uses it"
+  },
+  {
     id: 70,
     type: "single",
     topic: "Implementation Strategy",
@@ -1210,6 +1281,22 @@ window.QUESTION_BANK = [
     correctAnswer: "Advanced Loops add conditional logic and dynamic branching, including nested loops, complex conditions, and the ability to skip or break the loop based on criteria",
     explanation: "Advanced loops enhance basic loops by adding conditional logic and dynamic branching within the loop, such as nested loops and complex conditions, and allow skipping or breaking the loop based on specific criteria.",
     sourceReference: "Advanced Loops"
+  },
+  {
+    id: 89,
+    type: "single",
+    topic: "Falcon Fusion SOAR",
+    difficulty: "easy",
+    question: "In the Falcon platform's visual workflow builder, what color and icon represents a Loop, and how is the start of the loop visually distinguished from the end?",
+    options: [
+      "Blue, filled circular arrows; start is outlined, end is filled",
+      "Blue, circular arrows; start is filled with blue, end is only outlined in blue",
+      "Green, filled arrows; no visual distinction between start and end",
+      "Purple, dashed arrows; start and end look identical"
+    ],
+    correctAnswer: "Blue, circular arrows; start is filled with blue, end is only outlined in blue",
+    explanation: "The Loop icon is blue with 2 circular arrows. The start of the loop is filled with blue, while the end of the loop is only outlined in blue.",
+    sourceReference: "Advanced workflow elements - Loops"
   },
   {
     id: 90,
@@ -1987,6 +2074,17 @@ window.QUESTION_BANK = [
     correctAnswer: "48 minutes",
     explanation: "The material cites 'the average eCrime breakout time being just 48 minutes from the time an adversary first gains entry to your network to the time when they are moving laterally across your systems.'",
     sourceReference: "Why This Architecture Matters"
+  },
+  {
+    id: 147,
+    type: "single",
+    topic: "Platform Personas",
+    difficulty: "easy",
+    question: "Which persona is described as needing to 'hunt across all endpoints with unified data visibility'?",
+    options: ["Tim", "Tracey", "Sarah", "Jane"],
+    correctAnswer: "Tracey",
+    explanation: "Tracey (Threat Hunter) is quoted as saying: 'I hunt across all endpoints with unified data visibility.'",
+    sourceReference: "Why one agent matters"
   },
   {
     id: 148,
