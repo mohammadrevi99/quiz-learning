@@ -2,17 +2,65 @@
   "use strict";
 
   var STORAGE_KEY = "ccfa_quiz_state_v1";
-  var FULL_POOL = window.QUESTION_BANK;
+  var CONCEPTUAL_POOL = window.QUESTION_BANK;
+  var OPERATIONAL_POOL = window.OPERATIONAL_QUESTION_BANK || [];
+  var PALOALTO_POOL = window.PALOALTO_QUESTION_BANK || [];
+
+  // Safe to key by plain numeric id: CrowdStrike conceptual ids are 1-150,
+  // CrowdStrike operational ids are 2001+, Palo Alto ids are 3001+ - none
+  // of these ranges collide in this single shared map.
   var POOL_BY_ID = {};
-  FULL_POOL.forEach(function (q) { POOL_BY_ID[q.id] = q; });
+  CONCEPTUAL_POOL.forEach(function (q) { POOL_BY_ID[q.id] = q; });
+  OPERATIONAL_POOL.forEach(function (q) { POOL_BY_ID[q.id] = q; });
+  PALOALTO_POOL.forEach(function (q) { POOL_BY_ID[q.id] = q; });
+
+  var VENDORS = {
+    crowdstrike: {
+      label: "CrowdStrike Falcon",
+      pools: {
+        conceptual: { label: "Platform Knowledge", data: CONCEPTUAL_POOL, groupField: "topic", sub: "Falcon platform architecture, modules, AI, concepts" },
+        operational: { label: "Exam Domain Practice", data: OPERATIONAL_POOL, groupField: "examDomain", sub: "Operational admin tasks matching the official CCFA-200b exam blueprint" }
+      },
+      defaultPoolType: "conceptual"
+    },
+    paloalto: {
+      label: "Palo Alto Cortex (SecOps Professional)",
+      pools: {
+        dump: { label: "SecOps Professional Practice", data: PALOALTO_POOL, groupField: "category", sub: "Cortex XDR, XSOAR, XSIAM, SOC roles and process" }
+      },
+      defaultPoolType: "dump"
+    }
+  };
+
+  function currentVendor() {
+    return VENDORS[state.vendor] || VENDORS.crowdstrike;
+  }
+  function currentPoolConfig() {
+    var v = currentVendor();
+    return v.pools[state.poolType] || v.pools[v.defaultPoolType];
+  }
+  function activePool() {
+    return currentPoolConfig().data;
+  }
+  function groupField() {
+    return currentPoolConfig().groupField;
+  }
+
+  function updateHeader() {
+    var titleEl = document.getElementById("header-title");
+    var subEl = document.getElementById("header-subtitle");
+    if (!titleEl || !subEl) return;
+    var v = currentVendor();
+    titleEl.textContent = v.label + " Practice Exam";
+    subEl.textContent = currentPoolConfig().label;
+  }
 
   var LENGTH_OPTIONS = [25, 50, 100, "all"];
 
   var state = loadState() || createFreshState();
 
   // "questions" always refers to the ACTIVE SESSION's question list (a
-  // random subset of FULL_POOL chosen at start/restart time), not the
-  // entire pool. This is what every render/grading function operates on.
+  // random subset of the active pool chosen at start/restart time).
   var questions = [];
   rebuildSessionQuestions();
 
@@ -24,7 +72,7 @@
   restartBtn.addEventListener("click", function () {
     showModal({
       title: "Restart Quiz",
-      body: "This will erase all your answers and progress, and let you start a new attempt (with a freshly drawn set of questions from the pool of " + FULL_POOL.length + "). This action cannot be undone.",
+      body: "This will erase all your answers and progress, and let you start a new attempt (with a freshly drawn set of questions). This action cannot be undone.",
       actions: [
         { label: "Cancel", className: "btn-ghost", onClick: hideModal },
         {
@@ -45,8 +93,10 @@
   function createFreshState() {
     return {
       phase: "start", // "start" | "exam" | "results"
+      vendor: "crowdstrike", // "crowdstrike" | "paloalto"
+      poolType: "conceptual",
       examLength: 50,
-      sessionQuestionIds: [],
+      sessionQuestionIds: [], // plain ids from active pool at draw time
       currentIndex: 0,
       answers: {}, // id -> string (single) or array (multiple)
       submitted: false
@@ -65,7 +115,7 @@
   }
 
   function drawSessionQuestionIds(length) {
-    var allIds = FULL_POOL.map(function (q) { return q.id; });
+    var allIds = activePool().map(function (q) { return q.id; });
     var shuffled = shuffle(allIds);
     if (length === "all" || length >= allIds.length) return shuffled;
     return shuffled.slice(0, length);
@@ -88,9 +138,10 @@
       var parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object") return null;
       if (!parsed.phase) {
-        // legacy state from the fixed-50 version: treat as start screen
         return createFreshState();
       }
+      if (!parsed.vendor) parsed.vendor = "crowdstrike";
+      if (!parsed.poolType) parsed.poolType = "conceptual";
       return parsed;
     } catch (e) {
       return null;
@@ -161,6 +212,7 @@
   }
 
   function render() {
+    updateHeader();
     if (state.phase === "start") {
       renderStartScreen();
     } else if (state.phase === "results" || state.submitted) {
@@ -181,28 +233,115 @@
     var heading = document.createElement("div");
     heading.className = "question-text";
     heading.style.marginBottom = "6px";
-    heading.textContent = "CCFA Practice Exam";
+    heading.textContent = "Security Certification Practice";
     panel.appendChild(heading);
 
     var sub = document.createElement("div");
     sub.style.fontSize = "13.5px";
     sub.style.color = "var(--text-secondary)";
-    sub.style.marginBottom = "22px";
-    sub.textContent = "This attempt draws a fresh random set of questions from a pool of " +
-      FULL_POOL.length + ". Retake the quiz anytime for a mostly-different set - the goal is understanding, not memorizing question order.";
+    sub.style.marginBottom = "20px";
+    sub.textContent = "Choose a vendor and question pool, then how many questions this attempt draws. Each attempt is a fresh random draw - the goal is understanding, not memorizing question order.";
     panel.appendChild(sub);
 
+    // ---- Vendor selector ----
+    var vendorLabel = document.createElement("div");
+    vendorLabel.style.fontSize = "13px";
+    vendorLabel.style.fontWeight = "600";
+    vendorLabel.style.marginBottom = "10px";
+    vendorLabel.textContent = "Which vendor?";
+    panel.appendChild(vendorLabel);
+
+    var vendorWrap = document.createElement("div");
+    vendorWrap.className = "options-list";
+
+    Object.keys(VENDORS).forEach(function (key) {
+      var v = VENDORS[key];
+      var totalQuestions = Object.keys(v.pools).reduce(function (sum, pk) { return sum + v.pools[pk].data.length; }, 0);
+      var row = document.createElement("label");
+      row.className = "option-row";
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "vendor";
+      input.value = key;
+      input.checked = state.vendor === key;
+      if (input.checked) row.classList.add("selected");
+      input.addEventListener("change", function () {
+        state.vendor = key;
+        state.poolType = VENDORS[key].defaultPoolType;
+        state.examLength = 50;
+        renderStartScreen();
+      });
+      var span = document.createElement("span");
+      span.textContent = v.label + " (" + totalQuestions + " questions)";
+      row.appendChild(input);
+      row.appendChild(span);
+      vendorWrap.appendChild(row);
+    });
+
+    panel.appendChild(vendorWrap);
+
+    // ---- Pool selector (only shown when the vendor has more than one pool) ----
+    var vendor = currentVendor();
+    var poolKeys = Object.keys(vendor.pools);
+
+    if (poolKeys.length > 1) {
+      var poolLabel = document.createElement("div");
+      poolLabel.style.fontSize = "13px";
+      poolLabel.style.fontWeight = "600";
+      poolLabel.style.margin = "18px 0 10px";
+      poolLabel.textContent = "Which question pool?";
+      panel.appendChild(poolLabel);
+
+      var poolWrap = document.createElement("div");
+      poolWrap.className = "options-list";
+
+      poolKeys.forEach(function (key) {
+        var p = vendor.pools[key];
+        var row = document.createElement("label");
+        row.className = "option-row";
+        var input = document.createElement("input");
+        input.type = "radio";
+        input.name = "pool_type";
+        input.value = key;
+        input.checked = state.poolType === key;
+        if (input.checked) row.classList.add("selected");
+        input.addEventListener("change", function () {
+          state.poolType = key;
+          state.examLength = 50;
+          renderStartScreen();
+        });
+        var textWrap = document.createElement("span");
+        var mainSpan = document.createElement("div");
+        mainSpan.textContent = p.label + " (" + p.data.length + " questions)";
+        var subSpan = document.createElement("div");
+        subSpan.style.fontSize = "11.5px";
+        subSpan.style.color = "var(--text-secondary)";
+        subSpan.style.marginTop = "2px";
+        subSpan.textContent = p.sub;
+        textWrap.appendChild(mainSpan);
+        textWrap.appendChild(subSpan);
+        row.appendChild(input);
+        row.appendChild(textWrap);
+        poolWrap.appendChild(row);
+      });
+
+      panel.appendChild(poolWrap);
+    }
+
+    // ---- Length selector ----
     var label = document.createElement("div");
     label.style.fontSize = "13px";
     label.style.fontWeight = "600";
-    label.style.marginBottom = "10px";
+    label.style.margin = "18px 0 10px";
     label.textContent = "How many questions for this attempt?";
     panel.appendChild(label);
 
     var optionsWrap = document.createElement("div");
     optionsWrap.className = "options-list";
 
+    var poolSize = activePool().length;
     LENGTH_OPTIONS.forEach(function (opt) {
+      if (opt !== "all" && opt >= poolSize) return; // skip redundant sizes larger than the pool itself
       var row = document.createElement("label");
       row.className = "option-row";
       var input = document.createElement("input");
@@ -217,7 +356,7 @@
       });
       var span = document.createElement("span");
       span.textContent = opt === "all"
-        ? "All available questions (" + FULL_POOL.length + ")"
+        ? "All available questions (" + poolSize + ")"
         : opt + " questions";
       row.appendChild(input);
       row.appendChild(span);
@@ -231,7 +370,8 @@
     startBtn.style.width = "100%";
     startBtn.textContent = "Start Exam";
     startBtn.addEventListener("click", function () {
-      state.sessionQuestionIds = drawSessionQuestionIds(state.examLength);
+      var len = state.examLength >= poolSize ? "all" : state.examLength;
+      state.sessionQuestionIds = drawSessionQuestionIds(len);
       state.currentIndex = 0;
       state.answers = {};
       state.submitted = false;
@@ -395,7 +535,8 @@
     poolNote.style.fontSize = "11px";
     poolNote.style.color = "var(--text-secondary)";
     poolNote.style.marginBottom = "14px";
-    poolNote.textContent = "Drawn from a pool of " + FULL_POOL.length + " questions";
+    poolNote.textContent = currentVendor().label + " - " + currentPoolConfig().label +
+      " - drawn from a pool of " + activePool().length + " questions";
     panel.appendChild(poolNote);
 
     var grid = document.createElement("div");
@@ -492,6 +633,8 @@
     topActions.appendChild(restartBtn2);
     mainEl.appendChild(topActions);
 
+    mainEl.appendChild(buildSectionBreakdown());
+
     var sectionTitle = document.createElement("div");
     sectionTitle.className = "section-title";
     sectionTitle.textContent = "Full Question Review";
@@ -500,6 +643,71 @@
     questions.forEach(function (q, idx) {
       mainEl.appendChild(buildReviewItem(q, idx));
     });
+  }
+
+  function buildSectionBreakdown() {
+    var field = groupField();
+    var groups = {}; // name -> {correct, total}
+
+    questions.forEach(function (q) {
+      var name = q[field] || "Other";
+      if (!groups[name]) groups[name] = { correct: 0, total: 0 };
+      groups[name].total++;
+      if (isCorrect(q)) groups[name].correct++;
+    });
+
+    var names = Object.keys(groups).sort(function (a, b) {
+      // Weakest percentage first, so problem areas are immediately visible
+      var pa = groups[a].correct / groups[a].total;
+      var pb = groups[b].correct / groups[b].total;
+      return pa - pb;
+    });
+
+    var panel = document.createElement("div");
+    panel.className = "results-panel";
+    panel.style.textAlign = "left";
+
+    var title = document.createElement("div");
+    title.style.fontWeight = "600";
+    title.style.fontSize = "15px";
+    title.style.marginBottom = "14px";
+    var fieldLabels = { topic: "Topic", examDomain: "Exam Domain", category: "Category" };
+    title.textContent = "Score by " + (fieldLabels[groupField()] || "Section");
+    panel.appendChild(title);
+
+    names.forEach(function (name) {
+      var g = groups[name];
+      var pct = Math.round((g.correct / g.total) * 100);
+
+      var row = document.createElement("div");
+      row.style.marginBottom = "10px";
+
+      var labelRow = document.createElement("div");
+      labelRow.style.display = "flex";
+      labelRow.style.justifyContent = "space-between";
+      labelRow.style.fontSize = "13px";
+      labelRow.style.marginBottom = "4px";
+      labelRow.innerHTML = "<span>" + escapeHtml(name) + "</span><span><strong>" + pct + "%</strong> (" + g.correct + "/" + g.total + ")</span>";
+      row.appendChild(labelRow);
+
+      var barTrack = document.createElement("div");
+      barTrack.style.height = "10px";
+      barTrack.style.background = "var(--bg)";
+      barTrack.style.border = "1px solid var(--border)";
+      barTrack.style.borderRadius = "5px";
+      barTrack.style.overflow = "hidden";
+
+      var barFill = document.createElement("div");
+      barFill.style.height = "100%";
+      barFill.style.width = pct + "%";
+      barFill.style.background = pct >= 70 ? "var(--success)" : pct >= 50 ? "#c99a1f" : "var(--danger)";
+      barTrack.appendChild(barFill);
+      row.appendChild(barTrack);
+
+      panel.appendChild(row);
+    });
+
+    return panel;
   }
 
   function formatUserAnswer(q) {
